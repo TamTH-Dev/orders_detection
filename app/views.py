@@ -2,7 +2,7 @@ import cv2
 import numpy as np
 import pprint
 from app import app
-from flask import request, jsonify, make_response
+from flask import request, jsonify
 from .image_processing import process
 
 pp = pprint.PrettyPrinter(indent=4)
@@ -22,10 +22,8 @@ def upload_image():
             order_details_obj = process(img)
 
             # Convert from dictionary object to json
-            response = make_response(jsonify(order_details_obj), 200)
+            # response = make_response(jsonify(order_details_obj), 200)
+            # pp.pprint(response.get_json())
+    message = 'Image is uploaded successfully' if order_details_obj else 'Failed to upload image!'
 
-            pp.pprint(response.get_json())
-
-            return response
-
-    return make_response(jsonify({'message': 'Upload image failed!'}), 400)
+    return jsonify({'message': message})
