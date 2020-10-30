@@ -66,12 +66,13 @@ def process(img):
         analyzed_data = analyze_text_data(data_frame)
 
         item = {}
-        gap_index = 0 if not analyzed_data[0].isnumeric() else 1
-        for data in enumerate(analyzed_data):
-            index, detail = data
-            if index == 0 and detail.isnumeric():
-                continue
-            item[item_properties[index - gap_index]] = detail
+        if len(analyzed_data) > 0:
+            gap_index = 0 if not analyzed_data[0].isnumeric() else 1
+            for data in enumerate(analyzed_data):
+                index, detail = data
+                if index == 0 and detail.isnumeric():
+                    continue
+                item[item_properties[index - gap_index]] = detail
 
         order.append(item)
 
