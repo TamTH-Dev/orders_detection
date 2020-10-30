@@ -70,7 +70,7 @@ def process(img):
             gap_index = 0 if not analyzed_data[0].isnumeric() else 1
             for data in enumerate(analyzed_data):
                 index, detail = data
-                if index == 0 and detail.isnumeric():
+                if (index == 0 and detail.isnumeric()) or index < gap_index or index - gap_index >= len(item_properties):
                     continue
                 item[item_properties[index - gap_index]] = detail
 
