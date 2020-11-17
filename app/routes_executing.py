@@ -1,13 +1,81 @@
 import cv2
 import time
-import pprint
 import numpy as np
+import requests
+import json
+import re
+import constants
 from .firebase_storage import get_storage
 from .image_processing import process
+from redis import Redis
+from rq import Queue, Retry
 
-pp = pprint.PrettyPrinter(indent=4)
-
+q = Queue(connection=Redis(host='0.0.0.0', port=6379))
 storage = get_storage()
+
+
+def process_order_details_data(order_details_obj):
+    order_details = []
+
+    for order in order_details_obj['order-details']:
+        order_details.append({
+            'product_id': 'string',
+            'product_name': order['itemName'],
+            'total_amount': int(re.sub('[^0-9]', '', order['total'])),
+            'is_addition': True,
+            'item_quantity': int(re.sub('[^0-9]', '', order['quantity'])),
+            'quantity': int(re.sub('[^0-9]', '', order['quantity'])),
+            'unit_price': int(re.sub('[^0-9]', '', order['price'])),
+            'discount': 0,
+            'final_amount': 0,
+            'detail_description': order['annotation'] if 'annotation' in order else 'string',
+        })
+
+    return order_details
+
+
+def save_orders(order_details_obj):
+    t = time.localtime()
+    current_time = time.strftime('%H:%M:%S', t)
+
+    saved_data = [
+        {
+            'store_id': 'D_01',
+            'rent_code': 'string',
+            'invoice_id': 'string',
+            'check_in_date': f'{current_time}',
+            'check_out_date': f'{current_time}',
+            'approve_date': '2020-11-17T18:48:49.852Z',
+            'total_amount': 0,
+            'discount': 0,
+            'discount_order_detail': 0,
+            'delivery_service_id': 'G',
+            'delivery_cost': 0,
+            'final_amount': 0,
+            'delivery_receiver': 'string',
+            'delivery_phone': 'string',
+            'delivery_address': 'string',
+            'delivery_latitude': 0,
+            'delivery_longitude': 0,
+            'customer_id': 0,
+            'order_details': process_order_details_data(order_details_obj),
+            'order_image_urls': [
+                {
+                    'image_url': 'string'
+                }
+            ]
+        }
+    ]
+
+    with open('token.txt') as f:
+        token = json.load(f)
+        access_token = token['access_token']
+
+        r = requests.post(f'{constants.API_DOMAIN}{constants.ORDERS_SAVING_ROUTE}', json=saved_data,
+                          headers={'Authorization': 'Bearer ' + access_token})
+
+        if (r.status_code == 201):
+            print('Save order to database successfully!')
 
 
 def process_img(bytes_str):
@@ -20,8 +88,11 @@ def process_img(bytes_str):
             bytes_str, np.uint8), cv2.IMREAD_COLOR)
 
         order_details_obj = process(img)
-        pp.pprint(order_details_obj)
+
         print('Completed to detect image!')
+
+        job = q.enqueue(
+            save_orders, order_details_obj, retry=Retry(max=5))  # Retry max to 5 times before pop action from queue
 
     except Exception as error:
         raise RuntimeError(error)

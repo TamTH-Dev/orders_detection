@@ -1,4 +1,8 @@
 import os
+import requests
+import json
+import constants
+from . import config
 from app import app
 from flask import request, jsonify
 from .routes_executing import process_img, download_and_process_img
@@ -6,6 +10,16 @@ from redis import Redis
 from rq import Queue, Retry
 
 q = Queue(connection=Redis(host='0.0.0.0', port=6379))
+
+
+@app.before_first_request
+def get_access_token():
+    r = requests.post(f'{constants.API_DOMAIN}{constants.AUTHENTICATION_ROUTE}', json={
+                      'username': config.username, 'password': config.password})
+    access_token = r.json()['access_token']
+
+    with open('token.txt', 'w') as f:
+        json.dump({'access_token': access_token}, f, indent=4)
 
 
 @app.route('/upload-image', methods=['POST'])
