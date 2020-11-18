@@ -14,4 +14,4 @@ redis-server --port 6379 &
 sleep 1s
 python3 worker.py &
 sleep 1s
-flask run --port=5000 --host=0.0.0.0 &
+flask run --port=5000 --host=$1 &

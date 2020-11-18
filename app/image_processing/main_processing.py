@@ -15,9 +15,6 @@ def wait_and_close_window(window_name):
 
 
 def process(img):
-    #  img_path = 'images/bill.png'
-    #  img = cv2.imread(img_path)
-
     # Get grayscale image
     grayscale_img = get_grayscale_img(img)
 
@@ -75,7 +72,5 @@ def process(img):
                 item[item_properties[index - gap_index]] = detail
 
         order.append(item)
-
-    #  data = json.dumps(order, ensure_ascii=False, indent=4)
 
     return {'order-details': order}

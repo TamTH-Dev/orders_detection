@@ -1,9 +1,5 @@
-import pprint
 import numpy as np
 import cv2
-
-
-pp = pprint.PrettyPrinter(indent=4)
 
 
 # HoughLinesP return array-liked lines with format
