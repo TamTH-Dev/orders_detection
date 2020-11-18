@@ -84,7 +84,7 @@ def save_orders(order_details_obj):
             }
         ]
 
-        with open('token.txt') as f:
+        with open('access_token.json') as f:
             token = json.load(f)
             access_token = token['access_token']
 

@@ -18,7 +18,7 @@ def get_access_token():
                       'username': config.username, 'password': config.password})
     access_token = r.json()['access_token']
 
-    with open('token.txt', 'w') as f:
+    with open('access_token.json', 'w') as f:
         json.dump({'access_token': access_token}, f, indent=4)
 
 
