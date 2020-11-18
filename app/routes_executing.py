@@ -16,6 +16,7 @@ storage = get_storage()
 
 def process_order_details_data(order_details_obj):
     order_details = []
+    total = 0
 
     for order in order_details_obj['order-details']:
         order_details.append({
@@ -31,11 +32,14 @@ def process_order_details_data(order_details_obj):
             'detail_description': order['annotation'] if 'annotation' in order else 'string',
         })
 
-    return order_details
+        total += int(re.sub('[^0-9]', '', order['total']))
+
+    return order_details, total
 
 
 def save_orders(order_details_obj):
     is_valid = True
+    order_details, total = process_order_details_data(order_details_obj)
 
     if len(order_details_obj['order-details']) > 0:
         for order in order_details_obj['order-details']:
@@ -63,19 +67,19 @@ def save_orders(order_details_obj):
                 'check_in_date': f'{current_time}',
                 'check_out_date': f'{current_time}',
                 'approve_date': '2020-11-17T18:48:49.852Z',
-                'total_amount': 0,
+                'total_amount': total,
                 'discount': 0,
                 'discount_order_detail': 0,
                 'delivery_service_id': 'G',
                 'delivery_cost': 0,
-                'final_amount': 0,
+                'final_amount': total,
                 'delivery_receiver': 'string',
                 'delivery_phone': 'string',
                 'delivery_address': 'string',
                 'delivery_latitude': 0,
                 'delivery_longitude': 0,
                 'customer_id': 0,
-                'order_details': process_order_details_data(order_details_obj),
+                'order_details': order_details,
                 'order_image_urls': [
                     {
                         'image_url': 'string'
