@@ -40,7 +40,7 @@ def get_signal():
             if not os.path.exists('./app/images'):
                 os.makedirs('./app/images')
         except OSError:
-            print('Error: Creating images directory')
+            app.logger.error('Error when creating images directory')
 
         response = request.get_json()
         record_name = response['record_name']

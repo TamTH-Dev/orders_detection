@@ -8,6 +8,7 @@ import json
 import re
 import constants
 import PIL.Image as Image
+from app import app
 from datetime import datetime
 from .firebase_storage import get_storage
 from .image_processing import process
@@ -100,9 +101,9 @@ def save_orders(order_details_obj, img_url):
                               headers={'Authorization': 'Bearer ' + access_token})
 
             if (r.status_code == 201):
-                print('Save order to database successfully!')
+                app.logger.info('Save order to database successfully!')
     else:
-        print('Cannot detect order details from image')
+        app.logger.error('Cannot detect order details from image')
 
 
 def isInteger(s):
@@ -123,7 +124,7 @@ def process_img(bytes_str):
         if not os.path.exists('./app/images/'):
             os.makedirs('./app/images/')
     except OSError:
-        print('Error: Creating images directory')
+        app.logger.error('Error when creating images directory')
 
     try:
         # Get image from its bytes string
@@ -132,7 +133,7 @@ def process_img(bytes_str):
 
         order_details_obj = process(img)
 
-        print('Completed to analyze image!')
+        app.logger.info('Completed to analyze image!')
 
         img_name = f'bill_{current_time}.png'
         img_path = f'./app/images/{img_name}'
