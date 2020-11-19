@@ -103,7 +103,7 @@ def save_orders(order_details_obj, img_url):
             if (r.status_code == 201):
                 app.logger.info('Save order to database successfully!')
     else:
-        app.logger.error('Cannot detect order details from image')
+        app.logger.info('Cannot detect order details from image')
 
 
 def isInteger(s):
