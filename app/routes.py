@@ -37,14 +37,14 @@ def upload_image():
 def get_signal():
     if request.method == 'POST':
         try:
-            if not os.path.exists('./app/records'):
-                os.makedirs('./app/records')
+            if not os.path.exists('./app/images'):
+                os.makedirs('./app/images')
         except OSError:
-            print('Error: Creating directory of data')
+            print('Error: Creating images directory')
 
         response = request.get_json()
         record_name = response['record_name']
-        record_path = f'./app/records/{record_name}'
+        record_path = f'./app/images/{record_name}'
 
         job = q.enqueue(
             download_and_process_img, record_name, record_path, retry=Retry(max=5))  # Retry 5 times until removed from queue

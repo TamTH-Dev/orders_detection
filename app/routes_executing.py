@@ -1,3 +1,5 @@
+import os
+import io
 import cv2
 import time
 import numpy as np
@@ -5,6 +7,8 @@ import requests
 import json
 import re
 import constants
+import PIL.Image as Image
+from datetime import datetime
 from .firebase_storage import get_storage
 from .image_processing import process
 from redis import Redis
@@ -37,9 +41,8 @@ def process_order_details_data(order_details_obj):
     return order_details, total
 
 
-def save_orders(order_details_obj):
+def save_orders(order_details_obj, img_url):
     is_valid = True
-    order_details, total = process_order_details_data(order_details_obj)
 
     if len(order_details_obj['order-details']) > 0:
         for order in order_details_obj['order-details']:
@@ -56,16 +59,17 @@ def save_orders(order_details_obj):
         is_valid = False
 
     if is_valid:
+        order_details, total = process_order_details_data(order_details_obj)
         t = time.localtime()
-        current_time = time.strftime('%H:%M:%S', t)
+        current_date = time.strftime('%H:%M:%S', t)
 
         saved_data = [
             {
                 'store_id': 'D_01',
                 'rent_code': 'string',
                 'invoice_id': 'string',
-                'check_in_date': f'{current_time}',
-                'check_out_date': f'{current_time}',
+                'check_in_date': f'{current_date}',
+                'check_out_date': f'{current_date}',
                 'approve_date': '2020-11-17T18:48:49.852Z',
                 'total_amount': total,
                 'discount': 0,
@@ -82,7 +86,7 @@ def save_orders(order_details_obj):
                 'order_details': order_details,
                 'order_image_urls': [
                     {
-                        'image_url': 'string'
+                        'image_url': img_url
                     }
                 ]
             }
@@ -113,6 +117,14 @@ def process_img(bytes_str):
     delay = 2
     time.sleep(delay)
 
+    current_time = datetime.utcnow().strftime('%Y%m%d%H%M%S%f')
+
+    try:
+        if not os.path.exists('./app/images/'):
+            os.makedirs('./app/images/')
+    except OSError:
+        print('Error: Creating images directory')
+
     try:
         # Get image from its bytes string
         img = cv2.imdecode(np.fromstring(
@@ -122,8 +134,20 @@ def process_img(bytes_str):
 
         print('Completed to analyze image!')
 
-        job = q.enqueue(
-            save_orders, order_details_obj, retry=Retry(max=5))  # Retry max to 5 times before pop action from queue
+        img_name = f'bill_{current_time}.png'
+        img_path = f'./app/images/{img_name}'
+
+        # Save image to specified path
+        Image.open(io.BytesIO(bytes_str)).save(img_path)
+
+        # Uplod image to firebase storage
+        storage.child(
+            f'images/{img_name}').put(img_path)
+
+        # Get url of image from firebase storage
+        img_url = storage.child(f'images/{img_name}').get_url(None)
+
+        save_orders(order_details_obj, img_url)
 
     except Exception as error:
         raise RuntimeError(error)
