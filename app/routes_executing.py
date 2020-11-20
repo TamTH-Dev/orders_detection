@@ -33,7 +33,7 @@ def process_order_details_data(order_details_obj):
             'quantity': int(re.sub('[^0-9]', '', order['quantity'])),
             'unit_price': int(re.sub('[^0-9]', '', order['price'])),
             'discount': 0,
-            'final_amount': 0,
+            'final_amount': int(re.sub('[^0-9]', '', order['total'])),
             'detail_description': order['annotation'] if 'annotation' in order else 'string',
         })
 
@@ -141,7 +141,7 @@ def process_img(bytes_str):
         # Save image to specified path
         Image.open(io.BytesIO(bytes_str)).save(img_path)
 
-        # Uplod image to firebase storage
+        # Upload image to firebase storage
         storage.child(
             f'images/{img_name}').put(img_path)
 
